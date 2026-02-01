@@ -8,3 +8,6 @@ _book
 _manuscript
 _freeze
 _site
+
+/.quarto/
+**/*.quarto_ipynb

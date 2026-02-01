@@ -2,13 +2,14 @@ project:
   type: website
 
 website: 
-  image: ezvk/rstudio-logo.qmd
+  image: rstudio-logo.png
   
 format:
   html:
     comments:
       hypothesis: true
     toc: true
+    echo: false
     code-fold: true 
   beamer:
     beamerarticle: false

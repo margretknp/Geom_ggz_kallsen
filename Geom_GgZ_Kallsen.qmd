@@ -2,17 +2,7 @@
 subject: Finanzmathematische Spielereien
 title: "Geometrisches Gesetz der Großen Zahlen"
 subtitle: "nach einem Vortrag von Jan Kallsen"
-format: 
-  beamer: 
-    beamerarticle: false
-    # fig-num: false
 
-  # ezvk-pdf:
-  #   papersize: a4
-  #   toc: false
-  #   echo: false
-  #   fig-height: 3
-  #   keep-tex: true
 ---
 
 # Das Gesetz der Großen Zahlen...
@@ -302,15 +292,30 @@ fin_hr_plot <- ggplot(Finanzdaten) +
     key_glyph = "timeseries"
   ) +
   labs(
-    color = "Wiederholung", 
+    color = "Wiederholung/\nAsset", 
     y = "mittlere Rendite der ersten n Schritte", 
     x = "Zeit (Schritte)"
   ) +
+  scale_x_continuous(
+    breaks = 100 * 0:floor(n/100), 
+    expand = expansion(c(0.025,0), 0), 
+    minor_breaks = NULL
+  ) +
   scale_y_continuous(
     labels = scales::label_percent(accuracy = 1),
-    sec.axis = dup_axis(name = NULL)
+    sec.axis = dup_axis(name = NULL),
+    minor_breaks = NULL
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(hjust = 0.015),
+    # axis.title.y = element_text(hjust = 0.08),
+    # legend.position = "bottom",
+    panel.spacing = unit(20, "pt"),
+    plot.margin = margin(t = 20, r = 15, b = 20, l = 15, unit = "pt"),
+    strip.text = element_text(size = 12)
+    # strip.background = element_rect(color = "#999999")
+  )
 
 fin_hr_plot + 
   coord_cartesian(xlim = c(0, 300))
@@ -331,10 +336,12 @@ Die Mittlere Rendite liegt somit bei ca. +8% pro Zeitschritt.
 
 ------------------------------------------------------------------------
 
-Wenn nun bei gleicher Vola die Rendite niedriger ist, kann der "geometrische Grenzwert" auch negativ werden:
+Wenn nun bei gleicher Vola die Rendite niedriger ist, kann der Grenzwert auch negativ werden. Hier zum Beispiel mit Erwartungswert 1% für die Performance im Einzelschritt. Die langfristige Entwicklung ist dann negativ. Betrachtet man die Entwicklung eines vorgegebenen Anfangsvermögen, so sinkt dieses exponentiell.
 
 ```{r}
 #| label: verlauf-einzelanlage-niedrige-rendite
+#| fig-width: 7
+#| fig-height: 4
 
 
 n <- 10000
@@ -361,7 +368,9 @@ Finanzdaten_niedrig <- Finanzdaten_niedrig |>
   )
 
 
- patchwork::wrap_plots(
+anzeige_bis_schritt <- 5000
+
+patchwork::wrap_plots(
   ggplot(Finanzdaten_niedrig) +
     geom_line(
       aes(
@@ -369,15 +378,64 @@ Finanzdaten_niedrig <- Finanzdaten_niedrig |>
       ),
       key_glyph = "timeseries"
     ) +
-    labs(color = "Anlage", y = "annualisierte Rendite") +
-    scale_y_continuous(labels = scales::label_percent(accuracy = 1)),
+    labs(
+      color = "Wiederholung/\nAsset", 
+      y = "mittlere Rendite der ersten n Schritte", 
+      x = "Zeit (Schritte)"
+    ) +
+    scale_x_continuous(
+      breaks = 1000 * 0:floor(n/1000), 
+      expand = expansion(c(0.025,0), 0), 
+      minor_breaks = NULL
+    ) +
+    scale_y_continuous(
+      labels = scales::label_percent(accuracy = 1),
+      sec.axis = dup_axis(name = NULL),
+      minor_breaks = NULL
+    ) +
+    theme_minimal() +
+    theme(
+      axis.title.x = element_text(hjust = 0.015),
+      # axis.title.y = element_text(hjust = 0.08),
+      # legend.position = "bottom",
+      panel.spacing = unit(20, "pt"),
+      plot.margin = margin(t = 20, r = 15, b = 20, l = 15, unit = "pt"),
+      strip.text = element_text(size = 12)
+      # strip.background = element_rect(color = "#999999")
+    ) +
+    coord_cartesian(xlim = c(0, anzeige_bis_schritt)),
   ggplot(Finanzdaten_niedrig) +
     geom_line(
       aes(x = Schritt, y = X_prod, color = factor(Wiederholung)),
       key_glyph = "timeseries"
     ) +
-    labs(color = "Anlage", y = "Vermögen (log-Skala)") +
-  scale_y_log10(labels = NULL)
+    labs(
+      color = "Wiederholung/\nAsset", 
+      y = "Vermögen (log-Skala)", 
+      x = "Zeit (Schritte)"
+    ) +
+    scale_y_log10(
+      expand = expansion(c(0.025,0), 0), 
+      minor_breaks = NULL,
+      label = NULL
+    ) +
+    scale_x_continuous(
+      breaks = 1000 * 0:floor(n/1000), 
+      expand = expansion(c(0.025,0), 0), 
+      minor_breaks = NULL
+    ) +
+    theme_minimal() +
+    theme(
+      axis.title.x = element_text(hjust = 0.015),
+      axis.title.y = element_text(hjust = 0.08),
+      # legend.position = "bottom",
+      panel.spacing = unit(20, "pt"),
+      plot.margin = margin(t = 20, r = 15, b = 20, l = 15, unit = "pt"),
+      strip.text = element_text(size = 12)
+      # strip.background = element_rect(color = "#999999")
+    ) +
+    coord_cartesian(xlim = c(0, anzeige_bis_schritt))
+  
 ) + patchwork::plot_layout(guides = "collect") & 
   theme(legend.position = "bottom")
 
@@ -385,10 +443,12 @@ Finanzdaten_niedrig <- Finanzdaten_niedrig |>
 
 ---
 
-Jetzt schauen wir uns Portfolien aus mehreren solchen Anlagen an. Wir kaufen zu Beginn gleiche Anteile von allen verfügbaren Anlagen. Diese können wir dann entweder einfach halten ('plain portfolio') oder wir gleichen nach jedem Zeitschritt die Anteile wieder an, d.h. der Anteil der einzelnen Anlagen am Portfolio ist immer gleich ('balanced portfolio'). Konkret heißt das, wir verkaufen nach jedem Schritt etwas von den Anlagen die besser gelaufen sind und kaufen dafür diejenigen nach, die schlechter gelaufen sind. Dabei werden aber keine zusätzlichen Mittel eingesetzt, sonder nur zwischen den Anlagen umgeschichtet.
+Nun kombinieren wir mehreren solchen Anlagen zu einem Portfolio, d.h. wir kaufen zu Beginn gleiche Anteile von allen verfügbaren Anlagen. Diese können wir dann entweder einfach halten ('plain portfolio') oder wir gleichen nach jedem Zeitschritt die Anteile wieder an so dass der Anteil der einzelnen Anlagen am Portfolio immer gleich ist ('balanced portfolio'). 
 
 ```{r}
-# #| label: fig-verlauf-portfolio
+#| label: verlauf-portfolien
+#| fig-width: 7
+#| fig-height: 4
 
 Portfolio <- Finanzdaten_niedrig |>
   group_by(Schritt) |>
@@ -403,52 +463,164 @@ Portfolio <- Finanzdaten_niedrig |>
   )
 
 patchwork::wrap_plots(
-  ggplot(Finanzdaten_niedrig) +
+  ggplot(Finanzdaten_niedrig, aes(x = Schritt)) +
     geom_line(
-      aes(x = Schritt, y = GeoMittel - 1, color = factor(Wiederholung)),
-      linewidth = .1,
-      key_glyph = "timeseries"
-    ) +
-    geom_line(
-      data = Portfolio,
-      mapping = aes(
-        x = Schritt, y = balanced_GeoMittel - 1, color = "balanced portfolio"
+      aes(
+        y = GeoMittel - 1, color = factor(Wiederholung), linewidth = "asset"
       ),
       key_glyph = "timeseries"
     ) +
     geom_line(
       data = Portfolio,
       mapping = aes(
-        x = Schritt, y = sum_GeoMittel - 1, color = "plain portfolio"
-      ),
-      key_glyph = "timeseries"
-    ) +
-    labs(color = "Anlage", y = "annualisierte Rendite") +
-    scale_y_continuous(labels = scales::label_percent(accuracy = 1)),
-  ggplot(Finanzdaten_niedrig) +
-    geom_line(
-      aes(x = Schritt, y = X_prod, color = factor(Wiederholung)),
-      linewidth = .1,
-      key_glyph = "timeseries"
-    ) +
-    geom_line(
-      data = Portfolio,
-      mapping = aes(
-        x = Schritt, y = balanced_prod, color = "balanced portfolio"
+        y = balanced_GeoMittel - 1, color = "balanced portfolio", linewidth = "portfolio"
       ),
       key_glyph = "timeseries"
     ) +
     geom_line(
       data = Portfolio,
       mapping = aes(
-        x = Schritt, y = sum_prod, color = "plain portfolio"
+        y = sum_GeoMittel - 1, color = "plain portfolio", linewidth = "portfolio"
       ),
       key_glyph = "timeseries"
     ) +
-    labs(color = "Anlage", y = "Vermögen (log-Skala)") +
-    scale_y_log10(labels = NULL)
-) + patchwork::plot_layout(guides = "collect") & 
+    labs(
+      color = "Asset/\nPortfolio", 
+      y = "mittlere Rendite der ersten n Schritte", 
+      x = "Zeit (Schritte)"
+    ) +
+    scale_x_continuous(
+      breaks = 1000 * 0:floor(n/1000), 
+      expand = expansion(c(0.025,0), 0), 
+      minor_breaks = NULL
+    ) +
+    scale_y_continuous(
+      labels = scales::label_percent(accuracy = 1),
+      sec.axis = dup_axis(name = NULL),
+      minor_breaks = NULL
+    ) +
+    scale_linewidth_manual(
+      values = c("asset" = .1, "portfolio" = 1),
+      guide = "none"
+    ) +
+    guides(color = guide_legend(override.aes = list(linewidth = c(rep(.2, wdh), 1, 1)))) +
+    theme_minimal() +
+    theme(
+      axis.title.x = element_text(hjust = 0.015),
+      # axis.title.y = element_text(hjust = 0.08),
+      # legend.position = "bottom",
+      panel.spacing = unit(20, "pt"),
+      plot.margin = margin(t = 20, r = 15, b = 20, l = 15, unit = "pt"),
+      strip.text = element_text(size = 12)
+      # strip.background = element_rect(color = "#999999")
+    ) +
+    coord_cartesian(
+      xlim = c(0, anzeige_bis_schritt),
+      ylim = c(-.1, .1)
+    ),
+  ggplot(Finanzdaten_niedrig, aes(x = Schritt)) +
+    geom_line(
+      aes(
+        y = X_prod, color = factor(Wiederholung), linewidth = "asset"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    geom_line(
+      data = Portfolio,
+      mapping = aes(
+        y = balanced_prod, color = "balanced portfolio", linewidth = "portfolio"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    geom_line(
+      data = Portfolio,
+      mapping = aes(
+        y = sum_prod, color = "plain portfolio", linewidth = "portfolio"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    labs(
+      color = "Asset/\nPortfolio", 
+      y = "Vermögen (log-Skala)", 
+      x = "Zeit (Schritte)"
+    ) +
+    scale_y_log10(
+      expand = expansion(c(0.025,0), 0), 
+      minor_breaks = NULL,
+      label = NULL
+    ) +
+    scale_x_continuous(
+      breaks = 1000 * 0:floor(n/1000), 
+      expand = expansion(c(0.025,0), 0), 
+      minor_breaks = NULL
+    ) +
+    scale_linewidth_manual(
+      values = c("asset" = .1, "portfolio" = 1),
+      guide = "none"
+    ) +
+    guides(color = guide_legend(override.aes = list(linewidth = c(rep(.2, wdh), 1, 1)))) +
+    theme_minimal() +
+    theme(
+      axis.title.x = element_text(hjust = 0.015),
+      axis.title.y = element_text(hjust = 0.08),
+      # legend.position = "bottom",
+      panel.spacing = unit(20, "pt"),
+      plot.margin = margin(t = 20, r = 15, b = 20, l = 15, unit = "pt"),
+      strip.text = element_text(size = 12)
+      # strip.background = element_rect(color = "#999999")
+    ) +
+    coord_cartesian(xlim = c(0, anzeige_bis_schritt)),
+  guides = "collect"
+) &#+ patchwork::plot_layout(guides = "collect") & 
   theme(legend.position = "bottom")
+
+# patchwork::wrap_plots(
+#   ggplot(Finanzdaten_niedrig) +
+#     geom_line(
+#       aes(x = Schritt, y = GeoMittel - 1, color = factor(Wiederholung)),
+#       linewidth = .1,
+#       key_glyph = "timeseries"
+#     ) +
+#     geom_line(
+#       data = Portfolio,
+#       mapping = aes(
+#         x = Schritt, y = balanced_GeoMittel - 1, color = "balanced portfolio"
+#       ),
+#       key_glyph = "timeseries"
+#     ) +
+#     geom_line(
+#       data = Portfolio,
+#       mapping = aes(
+#         x = Schritt, y = sum_GeoMittel - 1, color = "plain portfolio"
+#       ),
+#       key_glyph = "timeseries"
+#     ) +
+#     labs(color = "Anlage", y = "annualisierte Rendite") +
+#     scale_y_continuous(labels = scales::label_percent(accuracy = 1)),
+#   ggplot(Finanzdaten_niedrig) +
+#     geom_line(
+#       aes(x = Schritt, y = X_prod, color = factor(Wiederholung)),
+#       linewidth = .1,
+#       key_glyph = "timeseries"
+#     ) +
+#     geom_line(
+#       data = Portfolio,
+#       mapping = aes(
+#         x = Schritt, y = balanced_prod, color = "balanced portfolio"
+#       ),
+#       key_glyph = "timeseries"
+#     ) +
+#     geom_line(
+#       data = Portfolio,
+#       mapping = aes(
+#         x = Schritt, y = sum_prod, color = "plain portfolio"
+#       ),
+#       key_glyph = "timeseries"
+#     ) +
+#     labs(color = "Anlage", y = "Vermögen (log-Skala)") +
+#     scale_y_log10(labels = NULL)
+# ) + patchwork::plot_layout(guides = "collect") & 
+#   theme(legend.position = "bottom")
 
 
 
