@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*_files
+.quarto
+_book
+_manuscript
+_freeze
+_site

@@ -1,0 +1,29 @@
+<sub-article article-type="notebook" id="nb-4">
+<front-stub>
+<title-group>
+<article-title>Geom_GgZ_Kallsen</article-title>
+</title-group>
+</front-stub>
+
+<body>
+<sec id="section">
+  <title>Section</title>
+  <p>This is a simple placeholder for the manuscript’s main
+  document.</p>
+  <sec specific-use="notebook-content">
+  <code language="r script">1 + 1
+  </code>
+  <boxed-text>
+    <preformat>[1] 2</preformat>
+  </boxed-text>
+  </sec>
+</sec>
+</body>
+
+
+
+<back>
+</back>
+
+
+</sub-article>

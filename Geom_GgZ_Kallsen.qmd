@@ -1,0 +1,455 @@
+---
+subject: Finanzmathematische Spielereien
+title: "Geometrisches Gesetz der Großen Zahlen"
+subtitle: "nach einem Vortrag von Jan Kallsen"
+format: 
+  beamer: 
+    beamerarticle: false
+    # fig-num: false
+
+  # ezvk-pdf:
+  #   papersize: a4
+  #   toc: false
+  #   echo: false
+  #   fig-height: 3
+  #   keep-tex: true
+---
+
+# Das Gesetz der Großen Zahlen...
+
+Der Mittelwert identischer, unabhängiger Zufallsvariablen konvergiert gegen ihren Erwartungswert:
+
+$$
+\frac{\sum_{k=1}^n X_k}{n} \rightarrow E\left[X_k\right]
+$$
+
+```{r}
+#| label: wuerfel-ggz
+#| message: false
+#| warning: false
+#| fig-width: 6
+#| fig-height: 3
+
+library(tidyverse)
+
+# t <- as.integer(Sys.time())
+# print(t)
+# set.seed(t)
+# set.seed(1769887433)
+set.seed(1769892275)
+
+n = 500 # mehr als 600 führen beim Multiplizieren später zum Überlauf!
+wdh = 6
+
+Daten <- tibble()
+
+for (wiederholung in 1:wdh) {
+  Daten <- bind_rows(
+    Daten,
+    tibble(
+      X = ceiling(runif(n, min = 0, max = 6)), 
+      Schritt = 1:n,
+      Wiederholung = wiederholung
+    )
+  )
+}
+
+Daten <- Daten |>
+  group_by(Wiederholung) |>
+    mutate(
+    X_cum = cumsum(X),
+    Mittelwert = X_cum/Schritt
+  )
+
+arith_mw_plot <- ggplot(
+  Daten, 
+  aes(
+    x = Schritt, 
+    y = Mittelwert, 
+    color = factor(Wiederholung)
+  )
+) +
+  geom_line(key_glyph = "timeseries") +
+  expand_limits(y = c(1, 6)) +
+  labs(
+    color = "Wiederholung", 
+    x = "Anzahl Würfe", 
+    y = "Mittelwert der ersten n Würfe"
+  ) +
+  geom_hline(
+    mapping = aes(
+      yintercept = 3.5, 
+      linetype = "Erwartungswert\nEinzelwurf")
+  ) +
+  scale_linetype_manual(
+    values = c("Erwartungswert\nEinzelwurf" = "dashed"), 
+    guide = guide_legend(title = NULL)
+  ) +
+  scale_x_continuous(
+    breaks = 100 * 0:floor(n/100), 
+    expand = expansion(c(0.025,0), 0), 
+    minor_breaks = NULL
+  ) +
+  scale_y_continuous(
+    breaks = c(1,2,3,4,5,6), 
+    expand = expansion(0.05,0), 
+    minor_breaks = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(hjust = 0.02),
+    axis.title.y = element_text(hjust = 0.07)
+  ) 
+
+arith_mw_plot +
+  coord_cartesian(xlim = c(0,100))
+
+
+
+
+```
+
+# ... gilt auch für das geometrische Mittel ...
+
+$$ \sqrt[n]{\prod_{k=1}^n X_k} \rightarrow\ ?? $$
+
+```{r}
+#| label: wuerfel-ggz-geom-mittel
+#| message: false
+#| warning: false
+#| fig-width: 6
+#| fig-height: 3
+
+
+Daten <- Daten |>
+  mutate(
+   X_prod = cumprod(X),
+   GeoMittel = X_prod^(1/Schritt)
+  )
+
+geom_mw_plot <- ggplot(
+  Daten, 
+  aes(x = Schritt, y = GeoMittel, color = factor(Wiederholung))
+) +
+  geom_line(key_glyph = "timeseries") +
+  expand_limits(y = c(1, 6)) +
+  labs(
+    color = "Wiederholung", 
+    x = "Anzahl Würfe", 
+    y = "geom. Mittel der ersten n Würfe"
+  ) +
+  # geom_hline(mapping = aes(
+    # yintercept = 3.5, 
+    # linetype = "Erwartungswert\nEinzelwurf")) +#, show.legend = TRUE
+  # ) +
+  # scale_linetype_manual(
+    # values = c("Erwartungswert\nEinzelwurf" = "dashed"), 
+    # guide = guide_legend(title = NULL)
+  # ) +
+  scale_x_continuous(
+    breaks = 100 * 0:floor(n/100), 
+    expand = expansion(c(0.025,0), 0), minor_breaks = NULL
+  ) +
+  scale_y_continuous(
+    breaks = 1:6, 
+    expand = expansion(0.05,0),
+    minor_breaks = NULL,
+    sec.axis = dup_axis(name = NULL)
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(hjust = 0.02),
+    axis.title.y = element_text(hjust = 0.07)
+  ) 
+
+geom_mw_plot +
+  coord_cartesian(xlim = c(0,100))
+
+
+```
+
+# ... allerdings mit anderem Grenzwert.
+
+Der Grenzwert lässt sich mit dem "normalen" Gesetz der Großen Zahlen herleiten:
+
+\begin{align*}
+ \sqrt[n]{\prod_{k=1}^n X_k} &= \exp\left(\frac{\sum_{k=1}^{n}\log X_k}{n}\right)\\
+ &\rightarrow \exp\Big(E[\log X]\Big) \\
+ &\approx 1 + E[X] - \frac{Var[X]}{2}
+\end{align*}
+
+Für das Würfelbeispiel erhält man $\approx 3$, was gut zur Simulation oben passt.
+
+# Arithmetisches und Geometrisches Mittel im Vergleich
+
+```{r}
+#| label: vgl-arith-geom-mittel
+#| fig-width: 6
+#| fig-height: 4
+
+
+Daten_lang <- Daten |>
+  select(!c(X_cum, X_prod)) |>
+  rename(`arithmetisches Mittel` = Mittelwert, `geometrisches Mittel` = GeoMittel) |>
+  pivot_longer(
+    cols = ends_with("Mittel"),
+    names_to = "variante_mw",
+    values_to = "mw"
+  )
+
+beide_mw_plot <- ggplot(
+  Daten_lang, 
+  aes(x = Schritt, y = mw, color = factor(Wiederholung))
+) +
+  geom_line(key_glyph = "timeseries") +
+  expand_limits(y = c(1, 6)) +
+  labs(
+    color = "Wiederholung", 
+    x = "Anzahl Würfe", 
+    y = "Mittel der ersten n Würfe"
+  ) +
+  geom_hline(
+    mapping = aes(yintercept = 3.5, linetype = "Erwartungswert\nEinzelwurf")
+  ) +
+  geom_hline(
+    mapping = aes(yintercept = exp(sum(log(1:6)/6)), linetype = "Grenzwert\ngeom. Mittel")
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Erwartungswert\nEinzelwurf" = "dashed", 
+      "Grenzwert\ngeom. Mittel" = "dotted"
+    ), 
+    guide = guide_legend(
+      title = NULL, 
+      theme = theme(
+        legend.key.spacing.y = unit(10, "pt"),
+        legend.direction = "vertical"
+      )
+    )
+  ) +
+  scale_x_continuous(
+    breaks = 100 * 0:floor(n/100), 
+    expand = expansion(c(0.025,0), 0), 
+    minor_breaks = NULL
+  ) +
+  scale_y_continuous(
+    breaks = 1:6, 
+    expand = expansion(0.05, 0), 
+    minor_breaks = NULL, 
+    sec.axis = dup_axis(name = NULL)
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(hjust = 0.015),
+    axis.title.y = element_text(hjust = 0.08),
+    legend.position = "bottom",
+    panel.spacing = unit(20, "pt"),
+    plot.margin = margin(t = 20, r = 15, b = 20, l = 15, unit = "pt"),
+    strip.text = element_text(size = 12)
+    # strip.background = element_rect(color = "#999999")
+  ) +
+  facet_wrap(vars(variante_mw))
+
+beide_mw_plot + coord_cartesian(xlim = c(0,100))
+
+```
+
+\newpage
+
+# Und was machen wir jetzt damit?
+
+Wir schauen uns mal eine fiktive Finanzanlage mit jährlich unabhängiger, normalverteilter Rendite an.
+
+-   Welche mittlere Rendite (geom. Mittel) kann ich (langfristig) erwarten von einem Asset mit Performanceerwartung +10% und Vola 20%?
+
+```{r}
+#| label: finanzanlage-hohe-rendite
+#| fig-width: 6
+#| fig-height: 3
+
+
+n <- 1000
+erw <- 0.1
+std_abw <- 0.2
+Finanzdaten <- tibble()
+
+for (wiederholung in 1:wdh) {
+  Finanzdaten <- bind_rows(
+    Finanzdaten,
+    tibble(
+      X = 1 + rnorm(n, mean = erw, sd = std_abw), 
+      Schritt = 1:n,
+      Wiederholung = wiederholung
+    )
+  )
+}
+
+Finanzdaten <- Finanzdaten |>
+  group_by(Wiederholung) |>
+    mutate(
+   X_prod = cumprod(X),
+   GeoMittel = X_prod^(1/Schritt)
+  )
+
+
+fin_hr_plot <- ggplot(Finanzdaten) +
+  geom_line(
+    aes(
+      x = Schritt, 
+      y = GeoMittel - 1, 
+      color = factor(Wiederholung)
+    ),
+    key_glyph = "timeseries"
+  ) +
+  labs(
+    color = "Wiederholung", 
+    y = "mittlere Rendite der ersten n Schritte", 
+    x = "Zeit (Schritte)"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent(accuracy = 1),
+    sec.axis = dup_axis(name = NULL)
+  ) +
+  theme_minimal()
+
+fin_hr_plot + 
+  coord_cartesian(xlim = c(0, 300))
+
+```
+
+------------------------------------------------------------------------
+
+Das langfristige Mittel bleibt sichtbar unter dem Erwartungswert für jede einzelne Periode von +10%. Mit der Formel von oben ergibt sich:
+
+\begin{align*}
+  \sqrt[n]{\prod_{k=1}^n (1+X_k)}\  \rightarrow \  \approx \ & 1 + E[X] - \frac{Var[X]}{2} \\
+  & 1 +\ 10\%\  -\ \  4\%/2\ \ \  =\ \  1 + 8\%
+\end{align*}
+
+Die Mittlere Rendite liegt somit bei ca. +8% pro Zeitschritt.
+
+
+------------------------------------------------------------------------
+
+Wenn nun bei gleicher Vola die Rendite niedriger ist, kann der "geometrische Grenzwert" auch negativ werden:
+
+```{r}
+#| label: verlauf-einzelanlage-niedrige-rendite
+
+
+n <- 10000
+erw <- 0.01
+std_abw <- 0.2
+Finanzdaten_niedrig <- tibble()
+
+for (wiederholung in 1:wdh) {
+  Finanzdaten_niedrig <- bind_rows(
+    Finanzdaten_niedrig,
+    tibble(
+      X = 1 + rnorm(n, mean = erw, sd = std_abw), 
+      Schritt = 1:n,
+      Wiederholung = wiederholung
+    )
+  )
+}
+
+Finanzdaten_niedrig <- Finanzdaten_niedrig |>
+  group_by(Wiederholung) |>
+    mutate(
+   X_prod = cumprod(X),
+   GeoMittel = X_prod^(1/Schritt)
+  )
+
+
+ patchwork::wrap_plots(
+  ggplot(Finanzdaten_niedrig) +
+    geom_line(
+      aes(
+        x = Schritt, y = GeoMittel - 1, color = factor(Wiederholung)
+      ),
+      key_glyph = "timeseries"
+    ) +
+    labs(color = "Anlage", y = "annualisierte Rendite") +
+    scale_y_continuous(labels = scales::label_percent(accuracy = 1)),
+  ggplot(Finanzdaten_niedrig) +
+    geom_line(
+      aes(x = Schritt, y = X_prod, color = factor(Wiederholung)),
+      key_glyph = "timeseries"
+    ) +
+    labs(color = "Anlage", y = "Vermögen (log-Skala)") +
+  scale_y_log10(labels = NULL)
+) + patchwork::plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
+
+```
+
+---
+
+Jetzt schauen wir uns Portfolien aus mehreren solchen Anlagen an. Wir kaufen zu Beginn gleiche Anteile von allen verfügbaren Anlagen. Diese können wir dann entweder einfach halten ('plain portfolio') oder wir gleichen nach jedem Zeitschritt die Anteile wieder an, d.h. der Anteil der einzelnen Anlagen am Portfolio ist immer gleich ('balanced portfolio'). Konkret heißt das, wir verkaufen nach jedem Schritt etwas von den Anlagen die besser gelaufen sind und kaufen dafür diejenigen nach, die schlechter gelaufen sind. Dabei werden aber keine zusätzlichen Mittel eingesetzt, sonder nur zwischen den Anlagen umgeschichtet.
+
+```{r}
+# #| label: fig-verlauf-portfolio
+
+Portfolio <- Finanzdaten_niedrig |>
+  group_by(Schritt) |>
+  summarise(
+    balanced = sum(X)/n(),
+    sum_prod = sum(X_prod)/n()
+  ) |>
+  mutate(
+    balanced_prod = cumprod(balanced),
+    balanced_GeoMittel = balanced_prod^(1/Schritt),
+    sum_GeoMittel = sum_prod^(1/Schritt)    
+  )
+
+patchwork::wrap_plots(
+  ggplot(Finanzdaten_niedrig) +
+    geom_line(
+      aes(x = Schritt, y = GeoMittel - 1, color = factor(Wiederholung)),
+      linewidth = .1,
+      key_glyph = "timeseries"
+    ) +
+    geom_line(
+      data = Portfolio,
+      mapping = aes(
+        x = Schritt, y = balanced_GeoMittel - 1, color = "balanced portfolio"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    geom_line(
+      data = Portfolio,
+      mapping = aes(
+        x = Schritt, y = sum_GeoMittel - 1, color = "plain portfolio"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    labs(color = "Anlage", y = "annualisierte Rendite") +
+    scale_y_continuous(labels = scales::label_percent(accuracy = 1)),
+  ggplot(Finanzdaten_niedrig) +
+    geom_line(
+      aes(x = Schritt, y = X_prod, color = factor(Wiederholung)),
+      linewidth = .1,
+      key_glyph = "timeseries"
+    ) +
+    geom_line(
+      data = Portfolio,
+      mapping = aes(
+        x = Schritt, y = balanced_prod, color = "balanced portfolio"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    geom_line(
+      data = Portfolio,
+      mapping = aes(
+        x = Schritt, y = sum_prod, color = "plain portfolio"
+      ),
+      key_glyph = "timeseries"
+    ) +
+    labs(color = "Anlage", y = "Vermögen (log-Skala)") +
+    scale_y_log10(labels = NULL)
+) + patchwork::plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
+
+
+
+```

@@ -1,0 +1,22 @@
+project:
+  type: website
+
+website: 
+  image: ezvk/rstudio-logo.qmd
+  
+format:
+  html:
+    comments:
+      hypothesis: true
+    toc: true
+    code-fold: true 
+  beamer:
+    beamerarticle: false
+
+# execute:
+#   freeze: auto
+
+editor: visual
+
+lang: de
+
