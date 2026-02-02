@@ -503,7 +503,7 @@ patchwork::wrap_plots(
       values = c("asset" = .1, "portfolio" = 1),
       guide = "none"
     ) +
-    guides(color = guide_legend(override.aes = list(linewidth = c(rep(.2, wdh), 1, 1)))) +
+    guides(color = guide_legend(override.aes = list(linewidth = c(rep(.5, wdh), 1, 1)))) +
     theme_minimal() +
     theme(
       axis.title.x = element_text(hjust = 0.015),
@@ -558,7 +558,7 @@ patchwork::wrap_plots(
       values = c("asset" = .1, "portfolio" = 1),
       guide = "none"
     ) +
-    guides(color = guide_legend(override.aes = list(linewidth = c(rep(.2, wdh), 1, 1)))) +
+    guides(color = guide_legend(override.aes = list(linewidth = c(rep(.5, wdh), 1, 1)))) +
     theme_minimal() +
     theme(
       axis.title.x = element_text(hjust = 0.015),
