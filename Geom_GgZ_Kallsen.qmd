@@ -574,6 +574,7 @@ patchwork::wrap_plots(
 ) &#+ patchwork::plot_layout(guides = "collect") & 
   theme(legend.position = "bottom")
 
-
-
 ```
+
+Wenn wir also nach jedem Schritt etwas von denjenigen Anlagen verkaufen, die 'gut gelaufen' sind und dafür von denen die 'schlecht gelaufen' sind nachkaufen, können wir die Rendite des Portfolios deutlich erhöhen!
+
