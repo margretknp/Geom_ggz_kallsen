@@ -13,6 +13,7 @@ format:
     toc: true
     echo: false
     code-fold: true 
+    
   beamer:
     beamerarticle: false
 

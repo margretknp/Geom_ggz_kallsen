@@ -574,54 +574,6 @@ patchwork::wrap_plots(
 ) &#+ patchwork::plot_layout(guides = "collect") & 
   theme(legend.position = "bottom")
 
-# patchwork::wrap_plots(
-#   ggplot(Finanzdaten_niedrig) +
-#     geom_line(
-#       aes(x = Schritt, y = GeoMittel - 1, color = factor(Wiederholung)),
-#       linewidth = .1,
-#       key_glyph = "timeseries"
-#     ) +
-#     geom_line(
-#       data = Portfolio,
-#       mapping = aes(
-#         x = Schritt, y = balanced_GeoMittel - 1, color = "balanced portfolio"
-#       ),
-#       key_glyph = "timeseries"
-#     ) +
-#     geom_line(
-#       data = Portfolio,
-#       mapping = aes(
-#         x = Schritt, y = sum_GeoMittel - 1, color = "plain portfolio"
-#       ),
-#       key_glyph = "timeseries"
-#     ) +
-#     labs(color = "Anlage", y = "annualisierte Rendite") +
-#     scale_y_continuous(labels = scales::label_percent(accuracy = 1)),
-#   ggplot(Finanzdaten_niedrig) +
-#     geom_line(
-#       aes(x = Schritt, y = X_prod, color = factor(Wiederholung)),
-#       linewidth = .1,
-#       key_glyph = "timeseries"
-#     ) +
-#     geom_line(
-#       data = Portfolio,
-#       mapping = aes(
-#         x = Schritt, y = balanced_prod, color = "balanced portfolio"
-#       ),
-#       key_glyph = "timeseries"
-#     ) +
-#     geom_line(
-#       data = Portfolio,
-#       mapping = aes(
-#         x = Schritt, y = sum_prod, color = "plain portfolio"
-#       ),
-#       key_glyph = "timeseries"
-#     ) +
-#     labs(color = "Anlage", y = "Vermögen (log-Skala)") +
-#     scale_y_log10(labels = NULL)
-# ) + patchwork::plot_layout(guides = "collect") & 
-#   theme(legend.position = "bottom")
-
 
 
 ```

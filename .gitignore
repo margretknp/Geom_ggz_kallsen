@@ -7,6 +7,4 @@
 _book
 _manuscript
 _freeze
-docs
 /.quarto/
-**/*.quarto_ipynb
