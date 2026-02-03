@@ -10,6 +10,7 @@ format:
   html:
     comments:
       hypothesis: true
+    embed-resources: true
     toc: true
     echo: false
     code-fold: true 
